@@ -44,7 +44,48 @@ class ModelTrainer:
                 "CatBoosting Regressor":CatBoostRegressor(verbose=False),
                 "Adaboost Regressor":AdaBoostRegressor()
             }
-            model_report:dict=evaluate_model(X_train=X_train,y_train=y_train,X_test=X_test,y_test=y_test,models=models)
+
+            params={
+                "Decision Tree":{
+                    'criterion':['squared_error','absolute_error','poisson'],
+                    # 'splitter':['best','random'],
+                    #'max_features':['sqrt','log2']
+                },
+                "Random Forest":{
+                    #'criterian':['squared_error','friedman_mse','absolute_error','poisson'],
+                    # "max_feature":['sqrt','log2','None'],
+                    'n_estimators':[8,16,32,64,128,256]
+                },
+                "Gradient Boosting":{
+                    #'loss':['sqaured_error','huber','absolute_error','quartile'],
+                    'learning_rate':[.1,.01,.05,.001],
+                    'subsample':[0.6,0.7,0.75,0.8,0.85,0.9],
+                    #'criterian':['sqaured_error','friedman_mse'],
+                    'n_estimators':[8,16,32,64,128,256]
+                },
+                "Linear Regression":{},
+                "K-Neighbour Regression":{
+                    'n_neighbors':[5,7,9,11],
+                    #'weights':['uniform','distance'],
+                    #'algorithm':['ball_tree','kd_tree','brute']
+                },
+                "XGB Regressor":{
+                    'learning_rate':[.1,.01,.05,.001],
+                    'n_estimators':[8,16,32,64,128,256]
+                },
+                "CatBoosting Regressor":{
+                    'depth':[6,8,10],
+                    'learning_rate':[.1,.01,.05,.001],
+                    'iterations':[30,50,100]
+                },
+                "AdaBoost Regressor":{
+                    'learning_rate':[.1,.01,.05,.001],
+                    #'loss':['linear','square','exponential']
+                    'n_estimators':[8,16,32,64,128,256]
+                }
+            }
+
+            model_report:dict=evaluate_model(X_train=X_train,y_train=y_train,X_test=X_test,y_test=y_test,models=models,param=params)
             best_model_score=max(sorted(model_report.values()))
             best_model_name=list(model_report.keys())[
                 list(model_report.values()).index(best_model_score)
@@ -53,6 +94,8 @@ class ModelTrainer:
             if best_model_score<0.6:
                 raise CustomException('No best model found')
             logging.info('Best model found on both training and testing dataset')
+
+            best_model.fit(X_train,y_train)
 
             save_object(
                 file_path=self.model_trainer_config.trained_model_file_path,
